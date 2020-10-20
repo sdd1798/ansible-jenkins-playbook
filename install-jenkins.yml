@@ -1,0 +1,30 @@
+---
+- name: Configure CI server
+  hosts: ci-server
+  become: yes
+  
+  vars:
+    jenkins_plugins:
+      - build-pipeline-plugin
+      - build-monitor-plugin
+      - workflow-aggregator
+      - ws-cleanup
+      - pipeline-utility-steps
+      - pipeline-multibranch-defaults
+      - pipeline-stage-view
+      - ant
+      - blueocean
+      - ansicolor
+      - timestamper
+      - ssh-slaves
+      - matrix-auth
+      - awseb-deployment-plugin
+      - basic-branch-build-strategies
+  roles:
+    - curl
+    - git
+    - java
+    - maven
+    - role: geerlingguy.jenkins
+      vars:
+        jenkins_prefer_lts: true
