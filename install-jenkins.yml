@@ -20,11 +20,13 @@
       - matrix-auth
       - awseb-deployment-plugin
       - basic-branch-build-strategies
+    jenkins_process_user: ubuntu
   roles:
     - curl
     - git
     - java
     - maven
+    - ebcli
     - role: geerlingguy.jenkins
       vars:
         jenkins_prefer_lts: true

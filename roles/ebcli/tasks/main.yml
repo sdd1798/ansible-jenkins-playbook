@@ -1,0 +1,33 @@
+---
+- name: install ebcli dependencies
+  apt:
+    name:
+      - build-essential 
+      - zlib1g-dev 
+      - libssl-dev 
+      - libncurses-dev 
+      - libffi-dev 
+      - libsqlite3-dev 
+      - libreadline-dev 
+      - libbz2-dev
+    state: present
+    update_cache: yes
+
+- name: clone ebcli repo
+  become_user: "{{ jenkins_process_user }}"
+  git:
+    repo: 'https://github.com/aws/aws-elastic-beanstalk-cli-setup.git'
+    dest: ~/aws-elastic-beanstalk-cli-setup
+
+- name: install ebcl
+  become_user: "{{ jenkins_process_user }}"
+  shell: ~/aws-elastic-beanstalk-cli-setup/scripts/bundled_installer
+
+- name: update PATH variable
+  become_user: "{{ jenkins_process_user }}"
+  blockinfile:
+    path: ~/.bash_profile
+    block: | 
+      export PATH=~/.ebcli-virtual-env/executables:$PATH
+      export PATH=~/.pyenv/versions/3.7.2/bin:$PATH 
+    create: yes

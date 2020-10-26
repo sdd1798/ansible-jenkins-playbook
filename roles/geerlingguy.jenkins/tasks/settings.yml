@@ -20,14 +20,40 @@
   with_items: "{{ jenkins_init_changes }}"
   register: jenkins_init_prefix
 
+- name: Stop jenkins before making jenkins_home changes
+  service:
+    name: jenkins
+    state: stopped
+  when: jenkins_init_prefix.changed
+  tags: ['skip_ansible_lint']
+
 - name: Ensure jenkins_home {{ jenkins_home }} exists.
   file:
     path: "{{ jenkins_home }}"
     state: directory
-    owner: jenkins
-    group: jenkins
+    owner: '{{ jenkins_process_user }}'
+    group: '{{ jenkins_process_group }}'
     mode: u+rwx
+    recurse: yes
     follow: true
+
+- name: Ensure jenkins_log_dir {{ jenkins_log_dir }} exists
+  file:
+    path: "{{ jenkins_log_dir }}"
+    state: directory
+    owner: '{{ jenkins_process_user }}'
+    group: '{{ jenkins_process_group }}'
+    recurse: yes
+    mode: u+rwx
+
+- name: Ensure jenkins_cache_dir {{ jenkins_cache_dir }} exists
+  file:
+    path: "{{ jenkins_cache_dir }}"
+    state: directory
+    owner: '{{ jenkins_process_user }}'
+    group: '{{ jenkins_process_group }}'
+    recurse: yes
+    mode: u+rwx
 
 - name: Set the Jenkins home directory.
   lineinfile:
@@ -36,8 +62,18 @@
     line: 'JENKINS_HOME={{ jenkins_home }}'
   register: jenkins_home_config
 
+- name: Set the user and group that Jenkins runs as
+  lineinfile:
+    dest: "{{ jenkins_init_file }}"
+    regexp: '^JENKINS_USER=.*'
+    line: 'JENKINS_USER={{ jenkins_process_user }}'
+    mode: 0644
+  register: jenkins_process_user_config
+
 - name: Immediately restart Jenkins on init config changes.
-  service: name=jenkins state=restarted
+  service:
+    name: jenkins
+    state: restarted
   when: jenkins_init_prefix.changed
   tags: ['skip_ansible_lint']
 
@@ -79,4 +115,5 @@
     or (jenkins_http_config is defined and jenkins_http_config.changed)
     or (jenkins_home_config is defined and jenkins_home_config.changed)
     or (jenkins_proxy_config is defined and jenkins_proxy_config.changed)
+    or (jenkins_process_user_config is defined and jenkins_process_user_config.changed)
   tags: ['skip_ansible_lint']
