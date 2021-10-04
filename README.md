@@ -20,4 +20,4 @@ This ansible playbook will do following task
 
 3. Run following command to start installation
 
-        ansible-playbook install-jenkins.yml -i hosts
+        ansible-playbook install-jenkins.yml 
