@@ -7,26 +7,20 @@
     jenkins_plugins:
       - build-pipeline-plugin
       - build-monitor-plugin
-      - workflow-aggregator
-      - ws-cleanup
-      - pipeline-utility-steps
-      - pipeline-multibranch-defaults
-      - pipeline-stage-view
-      - ant
-      - blueocean
-      - ansicolor
-      - timestamper
-      - ssh-slaves
-      - matrix-auth
-      - awseb-deployment-plugin
-      - basic-branch-build-strategies
-    jenkins_process_user: ubuntu
+    jenkins_process_user: ec2-user
   roles:
     - curl
     - git
     - java
-    - maven
-    - ebcli
-    - role: geerlingguy.jenkins
+    - role: jenkins
       vars:
-        jenkins_prefer_lts: true
+        jenkins_version: "2.303"
+
+- name: Configure slave
+  hosts: agent
+  become: yes
+  roles:
+    - curl
+    - java
+    - jenkins-slave
+  tags: jenkins-slave

@@ -1,0 +1,9 @@
+jenkins_slave_user: jenkins
+jenkins_password: 117ecf7e2bfd1adad00763166a65eea99f
+jenkins_user: admin
+jenkins_url: "http://13.126.178.36:8080"
+jenkins_node: "{{ ansible_hostname }}"
+jenkins_numExecutors: 4
+jenkins_remoteFS: /home/{{ jenkins_slave_user }}
+jenkins_label: "node"
+java_home: /usr/bin/java

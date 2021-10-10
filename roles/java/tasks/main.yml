@@ -1,6 +1,6 @@
 ---    
 - name: Install Openjdk 8
   package: 
-    name: openjdk-8-jdk 
+    name: java-1.8.0-openjdk 
     state: present
     update_cache: yes

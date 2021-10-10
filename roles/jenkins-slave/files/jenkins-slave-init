@@ -1,0 +1,74 @@
+#!/bin/sh
+#
+# jenkins-slave:    Launch a Jenkins BuildSlave instance on this node
+#
+# chkconfig:    - 99 01
+# description:  Enable this node to fulfill build jobs
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+[ -f /etc/sysconfig/jenkins-slave ] && . /etc/sysconfig/jenkins-slave
+
+[ -n "$JENKINS_URL" ] || exit 0
+[ -n "$JENKINS_WORKDIR" ] || exit 0
+[ -n "$JENKINS_USER" ] || exit 0
+[ -n "$JENKINS_NODENAME" ] || exit 0
+[ -n "$JENKINS_SECRET" ] || exit 0
+
+prog=Jenkins-BuildSlave
+
+download_jar()
+{
+  curl -s -o agent.jar $JENKINS_URL/jnlpJars/agent.jar || exit 0
+}
+
+start()
+{
+  cd $JENKINS_WORKDIR
+  [ -f agent.jar ] || download_jar
+
+  echo -n $"Starting $prog: "
+
+  su - $JENKINS_USER sh -c "\
+    java -jar agent.jar \
+    -jnlpUrl $JENKINS_URL/computer/$JENKINS_NODENAME/slave-agent.jnlp \
+    -secret $JENKINS_SECRET \
+    -workDir $JENKINS_WORKDIR \
+    >slave.log 2>&1 &"
+
+  if [ $? = 0 ]; then echo '[OK]'; else echo '[NG]'; fi
+}
+
+stop()
+{
+  echo -n $"Shutting down $prog: "
+
+  PID=`ps -ef | grep '[j]ava -jar agent.jar' | awk '{print $2}'`
+  [ -n "$PID" ] && kill $PID
+
+  if [ $? = 0 ]; then echo '[OK]'; else echo '[NG]'; fi
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart|reload)
+    stop
+    start
+    ;;
+  status)
+    status java
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|restart|reload}"
+    exit 1
+esac
+
+exit 0

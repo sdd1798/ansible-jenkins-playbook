@@ -1,0 +1,80 @@
+---
+- name: create node on Jenkins master
+  uri:
+    url: "{{jenkins_url}}/computer/doCreateItem?name={{ jenkins_node }}&type=hudson.slaves.DumbSlave"
+    method: POST
+    body_format: form-urlencoded
+    force_basic_auth: yes
+    user: "{{ jenkins_user }}"
+    password: "{{jenkins_password }}"
+    body: "json={{ lookup('template', 'node.json.j2', convert_data=False) }}"
+#    headers:
+#      Jenkins-Crumb: 'eaaeeed1f821fba100f44820802b56ae9a3cb30ac35e87042d7f36b34564197f'
+    return_content: yes
+    status_code: 200, 302, 400
+  register: webpage
+
+- name: get node page content
+  uri:
+    url: "{{jenkins_url}}/computer/{{jenkins_node}}/slave-agent.jnlp"
+    method: POST
+    body_format: form-urlencoded
+    force_basic_auth: yes
+    user: "{{ jenkins_user }}"
+    password: "{{ jenkins_password }}"
+    return_content: yes
+    status_code: 200
+  register: slavepage
+
+- name: get secret from xml
+  xml:
+    xmlstring: "{{slavepage.content}}"
+    xpath: /jnlp/application-desc/argument
+    content: text
+  register: secretxml
+
+- name: Copy jenkins-slave default file template
+  template:
+    src: jenkins-slave-default.j2
+    dest: /etc/default/jenkins-slave
+    owner: root
+    group: root
+    mode: 0600
+  vars:
+    jenkins_secret: "{{secretxml.matches[0].argument}}"
+  register: jenkins_config
+
+#- name: Get agent.jar
+#  get_url:
+#    url: "{{jenkins_url}}/jnlpJars/agent.jar"
+#    dest: "/home/{{ jenkins_slave_user }}"
+#    mode: '0755'
+
+
+- name: Copy jenkins-slave init file
+  copy:
+    src: jenkins-slave-init
+    dest: /etc/init.d/jenkins-slave
+    owner: root
+    group: root
+    mode: 0755
+
+- name: restart and enable jenkins-slave service if needed
+  service:
+    name: jenkins-slave
+    enabled: yes
+    state: restarted
+  when: jenkins_config.changed
+
+-  name: start and enable jenkins-slave service
+   service:
+     name: jenkins-slave
+     enabled: yes
+     state: started
+
+#- name: connect jenkins agent
+#  shell: "nohup java -jar /home/jenkins/agent.jar -jnlpUrl {{jenkins_url}}/computer/ip-10-1-135-27/slave-agent.jnlp -secret {{ jenkins_secret }}  -workDir /home/{{ jenkins_slave_user }} </dev/null >/dev/null 2>&1 &"
+#  become_user: "{{ jenkins_slave_user }}"
+#  become: yes
+#  vars:
+#    jenkins_secret: "{{secretxml.matches[0].argument}}"

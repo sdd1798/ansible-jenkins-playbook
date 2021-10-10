@@ -1,0 +1,49 @@
+{
+   "name": "{{ jenkins_node }}",
+   "nodeDescription": "slave {{ jenkins_node }}",
+   "numExecutors": "{{ jenkins_numExecutors }}",
+   "remoteFS": "{{ jenkins_remoteFS }}",
+   "labelString": "{{ jenkins_label }}",
+   "mode": "EXCLUSIVE",
+   "": [
+      "hudson.slaves.JNLPLauncher",
+      "hudson.slaves.RetentionStrategy$Always"
+   ],
+   "launcher": {
+      "stapler-class": "hudson.slaves.JNLPLauncher",
+      "$class": "hudson.slaves.JNLPLauncher",
+      "workDirSettings": {
+         "disabled": true,
+         "workDirPath": "",
+         "internalDir": "remoting",
+         "failIfWorkDirIsMissing": false
+      },
+      "tunnel": "",
+      "vmargs": ""
+   },
+   "retentionStrategy": {
+      "stapler-class": "hudson.slaves.RetentionStrategy$Always",
+      "$class": "hudson.slaves.RetentionStrategy$Always"
+   },
+   "nodeProperties": {
+      "stapler-class-bag": "true",
+      "hudson-slaves-EnvironmentVariablesNodeProperty": {
+         "env": [
+            {
+               "key": "JAVA_HOME",
+               "value": "{{ java_home }}"
+            }
+         ]
+      },
+      "_comment:": {
+         "hudson-tools-ToolLocationNodeProperty": {
+           "locations": [
+               {
+                  "key": "hudson.model.JDK$DescriptorImpl@JAVA-8",
+                  "home": "/usr/bin/java"
+               }
+            ]
+         }
+      }
+   }
+}
